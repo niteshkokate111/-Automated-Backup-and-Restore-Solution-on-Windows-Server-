@@ -1,0 +1,51 @@
+# Define source and destination paths
+$sourcePath = "C:\CriticalData"
+$backupPath = "D:\Backups"
+
+# Ensure backup directory exists
+if (-Not (Test-Path $backupPath)) {
+    New-Item -ItemType Directory -Path $backupPath -Verbose
+}
+
+# Generate backup file name with timestamp
+$timestamp = (Get-Date).ToString("yyyyMMdd_HHmmss")
+$backupFile = Join-Path $backupPath "Backup_$timestamp.zip"
+
+# Perform backup
+Write-Output "Starting backup of $sourcePath to $backupFile"
+Compress-Archive -Path $sourcePath -DestinationPath $backupFile -Verbose
+
+# Clean up old backups (optional: keep last 7 backups)
+$backupRetentionDays = 7
+$oldBackups = Get-ChildItem -Path $backupPath -Filter "*.zip" | Where-Object {
+    $_.CreationTime -lt (Get-Date).AddDays(-$backupRetentionDays)
+}
+if ($oldBackups) {
+    Write-Output "Cleaning up old backups..."
+    $oldBackups | Remove-Item -Verbose
+}
+
+Write-Output "Backup completed successfully!"
+
+# Restore Function (optional, call manually)
+function Restore-Backup {
+    param(
+        [string]$BackupFile,
+        [string]$RestorePath
+    )
+    if (-Not (Test-Path $BackupFile)) {
+        Write-Output "Backup file not found: $BackupFile"
+        return
+    }
+    if (-Not (Test-Path $RestorePath)) {
+        New-Item -ItemType Directory -Path $RestorePath -Verbose
+    }
+    Write-Output "Restoring backup from $BackupFile to $RestorePath..."
+    Expand-Archive -Path $BackupFile -DestinationPath $RestorePath -Verbose
+    Write-Output "Restore completed successfully!"
+}
+Set up and automate the process of backing up critical files or folders on a Windows Server and demonstrate how to restore them in case of data loss.
+Set up and automate the process of backing up critical files or folders on a Windows Server and demonstrate how to restore them in case of data loss.
+.\BackupRestore.ps1
+Restore-Backup -BackupFile "D:\Backups\Backup_20231210_100000.zip" -RestorePath "C:\RestoredData"
+D:\Backups\Backup_20231210_100000.zip
